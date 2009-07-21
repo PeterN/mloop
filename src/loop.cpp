@@ -70,7 +70,9 @@ void Loop::Start(bool loop)
 
 void Loop::Stop()
 {
-	m_state = LS_STOPPING;
+	if (m_state == LS_PLAY_ONCE || m_state == LS_PLAY_LOOP) {
+		m_state = LS_STOPPING;
+	}
 }
 
 void Loop::StartFromNoteCache(NoteCache &cache)
