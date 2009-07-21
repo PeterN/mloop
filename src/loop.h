@@ -7,6 +7,7 @@
 #include <list>
 #include <jack/jack.h>
 #include <jack/midiport.h>
+#include "notecache.h"
 
 enum LoopState {
 	LS_IDLE,
@@ -34,6 +35,9 @@ public:
 	void SetLength(jack_nframes_t length);
 	void Start(bool loop);
 	void Stop();
+
+	void StartFromNoteCache(NoteCache &cache);
+	void EndFromNoteCache(NoteCache &cache);
 };
 
 #endif /* LOOP_H */

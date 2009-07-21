@@ -15,6 +15,7 @@ Jack::Jack()
 	m_connected = false;
 	m_recording = false;
 	m_buffer = new RingBuffer(2048);
+	m_notecache.Reset();
 }
 
 Jack::~Jack()
@@ -92,6 +93,8 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 	for (jack_nframes_t frame = 0; frame < nframes; frame++) {
 		while (ev.time == frame) {
 			jack_midi_event_write(output, ev.time, ev.buffer, ev.size);
+
+			m_notecache.HandleEvent(ev);
 
 			if (m_recording) {
 				/* Don't add the event to the buffer if it will become full.
@@ -211,8 +214,10 @@ void Jack::Run()
 					if (m_recording) {
 						m_recording = false;
 						m_loops[m_recording_loop].SetLength(m_recording_time);
+						m_loops[m_recording_loop].EndFromNoteCache(m_notecache);
 						printf("Finished recording loop %d\n", m_recording_loop);
 					} else {
+						m_loops[m_recording_loop].StartFromNoteCache(m_notecache);
 						m_recording_time = 0;
 						m_recording = true;
 						printf("Started recording loop %d\n", m_recording_loop);

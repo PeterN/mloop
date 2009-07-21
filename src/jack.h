@@ -6,6 +6,7 @@
 #include <jack/jack.h>
 #include "loop.h"
 #include "ringbuffer.h"
+#include "notecache.h"
 
 #define NUM_LOOPS 9
 
@@ -23,6 +24,8 @@ private:
 	bool           m_recording;
 	int            m_recording_loop;
 	jack_nframes_t m_recording_time;
+
+	NoteCache m_notecache;
 
 	static void ShutdownCallbackHandler(void *arg)
 	{
