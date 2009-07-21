@@ -45,6 +45,10 @@ public:
 				if ((cmd & 0xF0) == 0x80) velocity = 0;
 				m_notes[channel][note] = velocity;
 			}
+		} else if ((cmd & 0xF0) == 0xB0 && buffer[1] == 0x7B) {
+			/* All notes off */
+			int8_t channel = cmd & 0x0F;
+			memset(m_notes[channel], 0, sizeof m_notes[channel]);
 		}
 	}
 };
