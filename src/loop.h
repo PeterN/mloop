@@ -35,6 +35,7 @@ public:
 	void SetLength(jack_nframes_t length);
 	void Start(bool loop);
 	void Stop();
+	void Empty();
 
 	void StartFromNoteCache(NoteCache &cache);
 	void EndFromNoteCache(NoteCache &cache);

@@ -63,6 +63,8 @@ void Loop::Start(bool loop)
 {
 	if (m_state != LS_IDLE) return;
 
+	if (m_length == 0) return;
+
 	m_position = 0;
 	m_iterator = m_events.begin();
 	m_state = loop ? LS_PLAY_LOOP : LS_PLAY_ONCE;
@@ -121,10 +123,17 @@ void Loop::EndFromNoteCache(NoteCache &cache)
 	}
 }
 
-/*
-void Loop::Reset()
+void Loop::Empty()
 {
-	m_state = LS_IDLE;
+	if (m_state != LS_IDLE) return;
+
+	m_length = 0;
 	m_position = 0;
+
+	for (m_iterator = m_events.begin(); m_iterator != m_events.end(); ++m_iterator) {
+		jack_midi_event_t &event = (*m_iterator).first;
+		free(event.buffer);
+	}
+
+	m_events.clear();
 }
-*/

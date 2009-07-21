@@ -249,6 +249,11 @@ void Jack::Run()
 					printf("Stopping loop %d\n", m_recording_loop);
 					m_loops[m_recording_loop].Stop();
 					break;
+
+				case 'e':
+					printf("Erasing loop %d\n", m_recording_loop);
+					m_loops[m_recording_loop].Empty();
+					break;
 			}
 		}
 	}
