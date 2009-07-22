@@ -49,7 +49,7 @@ public:
 	void Disconnect();
 	bool Run();
 
-	void ToggleRecording(int loop);
+	void ToggleRecording(int loop, int bpm);
 	void StartLoop(int loop, bool repeat);
 	void StopLoop(int loop);
 	void EraseLoop(int loop);

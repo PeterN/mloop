@@ -131,10 +131,16 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 	return 0;
 }
 
-void Jack::ToggleRecording(int loop)
+void Jack::ToggleRecording(int loop, int bpm)
 {
 	if (m_recording) {
 		m_recording = false;
+
+		if (bpm > 0) {
+			jack_nframes_t chunk = 60 * m_sample_rate / bpm;
+			m_recording_time -= m_recording_time % chunk;
+		}
+
 		m_loops[m_recording_loop].SetLength(m_recording_time);
 		m_loops[m_recording_loop].SetState(LS_IDLE);
 		m_loops[m_recording_loop].EndFromNoteCache(m_notecache);

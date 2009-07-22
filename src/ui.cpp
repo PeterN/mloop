@@ -57,6 +57,7 @@ int getch()
 int bpm = 120;
 int color_map[4];
 char status[1024];
+bool quantise = false;
 
 bool UI::Run(Jack &j)
 {
@@ -128,14 +129,12 @@ bool UI::Run(Jack &j)
 
 	switch (c) {
 		case 3:
-		case 'q': {
 			endwin();
 			reset_terminal_mode();
 			return true;
-		}
 
 		case 'r':
-			j.ToggleRecording(m_loop);
+			j.ToggleRecording(m_loop, quantise ? bpm : 0);
 			if (j.Recording()) {
 				snprintf(status, sizeof status, "Start recording loop %d", m_loop);
 			} else {
@@ -171,6 +170,11 @@ bool UI::Run(Jack &j)
 		case 'e':
 			snprintf(status, sizeof status, "Erasing loop %d", m_loop);
 			j.EraseLoop(m_loop);
+			break;
+
+		case 'q':
+			quantise = !quantise;
+			snprintf(status, sizeof status, "Set quantise %s", quantise ? "on" : "off");
 			break;
 
 		case KEY_UP:
