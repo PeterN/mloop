@@ -8,6 +8,7 @@
 enum EditMode {
 	EM_LOOPS,
 	EM_BPM,
+	EM_TEMPO,
 };
 
 class UI {

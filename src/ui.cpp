@@ -154,8 +154,16 @@ bool UI::Run(Jack &j)
 		bkgdset(color_map[0]);
 		attrset(color_map[0]);
 
-		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs) Tempo: %0.1f%%", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i), j.GetTempo(i) * 100);
+		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs) Tempo: ", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i));
 		mvaddstr(i + y_offs, 0, buf);
+		if (m_loop == i && m_edit_mode == EM_TEMPO) {
+			bkgdset(color_map[2]);
+			attrset(color_map[2]);
+		}
+		snprintf(buf, sizeof buf, "%0.1f%%", j.GetTempo(i) * 100);
+		addstr(buf);
+		bkgdset(color_map[0]);
+		attrset(color_map[0]);
 		clrtoeol();
 
 		const char *c; int k = 3;
@@ -214,6 +222,17 @@ bool UI::Run(Jack &j)
 					m_bpm += (c - '0');
 				}
 				m_edit_timer = EDIT_TIMER_RESET;
+			} else if (m_edit_mode == EM_TEMPO) {
+				if (m_edit_timer <= 0) {
+					j.SetTempo(m_loop, 0.0);
+				}
+				float tempo = j.GetTempo(m_loop);
+				if (tempo < 1000.0) {
+					tempo *= 10;
+					tempo += (c - '0') / 100.0;
+					j.SetTempo(m_loop, tempo);
+				}
+				m_edit_timer = EDIT_TIMER_RESET;
 			} else {
 				m_loop = (c - '0');
 				snprintf(status, sizeof status, "Selected loop %d", m_loop);
@@ -250,11 +269,11 @@ bool UI::Run(Jack &j)
 			break;
 
 		case 'b':
-			if (m_edit_mode == EM_BPM) {
-				m_edit_mode = EM_LOOPS;
-			} else {
-				m_edit_mode = EM_BPM;
-			}
+			m_edit_mode = EM_BPM;
+			break;
+
+		case 't':
+			m_edit_mode = EM_TEMPO;
 			break;
 
 		case '\r':
@@ -266,6 +285,8 @@ bool UI::Run(Jack &j)
 			if (m_edit_mode == EM_BPM) {
 				m_bpm++;
 				if (m_bpm >= 1000) m_bpm = 999;
+			} else if (m_edit_mode == EM_TEMPO) {
+				j.SetTempo(m_loop, j.GetTempo(m_loop) + 0.001);
 			} else {
 				m_loop--;
 				if (m_loop == -1) m_loop = NUM_LOOPS - 1;
@@ -276,27 +297,20 @@ bool UI::Run(Jack &j)
 			if (m_edit_mode == EM_BPM) {
 				m_bpm--;
 				if (m_bpm < 0) m_bpm = 0;
+			} else if (m_edit_mode == EM_TEMPO) {
+				j.SetTempo(m_loop, j.GetTempo(m_loop) - 0.001);
 			} else {
 				m_loop++;
 				if (m_loop == NUM_LOOPS) m_loop = 0;
 			}
 			break;
 
-		case KEY_LEFT:
-			if (m_edit_mode == EM_LOOPS) {
-				j.SetTempo(m_loop, j.GetTempo(m_loop) - 0.001);
-			}
-			break;
-
-		case KEY_RIGHT:
-			if (m_edit_mode == EM_LOOPS) {
-				j.SetTempo(m_loop, j.GetTempo(m_loop) + 0.001);
-			}
-			break;
-
 		case KEY_BACKSPACE:
 			if (m_edit_mode == EM_BPM) {
 				m_bpm /= 10;
+				m_edit_timer = EDIT_TIMER_RESET;
+			} else if (m_edit_mode == EM_TEMPO) {
+				j.SetTempo(m_loop, j.GetTempo(m_loop) / 10);
 				m_edit_timer = EDIT_TIMER_RESET;
 			}
 			break;
