@@ -3,9 +3,6 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <limits.h>
-#include <string.h>
-#include <sys/select.h>
-#include <termios.h>
 #include <jack/jack.h>
 #include <jack/midiport.h>
 #include "jack.h"
@@ -40,6 +37,8 @@ bool Jack::Connect()
 	}
 
 	m_connected = true;
+
+	m_sample_rate = jack_get_sample_rate(m_client);
 
 	jack_on_shutdown(m_client, &ShutdownCallbackHandler, this);
 	jack_set_process_callback(m_client, &ProcessCallbackHandler, this);
@@ -132,129 +131,63 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 	return 0;
 }
 
-struct termios orig_termios;
-
-void reset_terminal_mode()
+void Jack::ToggleRecording(int loop)
 {
-	tcsetattr(0, TCSANOW, &orig_termios);
-}
-
-void set_conio_terminal_mode()
-{
-	struct termios new_termios;
-
-	/* take two copies - one for now, one for later */
-	tcgetattr(0, &orig_termios);
-	memcpy(&new_termios, &orig_termios, sizeof(new_termios));
-
-	/* register cleanup handler, and set the new terminal mode */
-	atexit(reset_terminal_mode);
-	cfmakeraw(&new_termios);
-	tcsetattr(0, TCSANOW, &new_termios);
-}
-
-int kbhit()
-{
-	struct timeval tv = { 0L, 0L };
-	fd_set fds;
-	FD_SET(0, &fds);
-	return select(1, &fds, NULL, NULL, &tv);
-}
-
-int getch()
-{
-	int r;
-	unsigned char c;
-	if ((r = read(0, &c, sizeof(c))) < 0) {
-		return r;
+	if (m_recording) {
+		m_recording = false;
+		m_loops[m_recording_loop].SetLength(m_recording_time);
+		m_loops[m_recording_loop].EndFromNoteCache(m_notecache);
 	} else {
-		return c;
+		m_recording_loop = loop;
+		m_loops[m_recording_loop].StartFromNoteCache(m_notecache);
+		m_recording_time = 0;
+		m_recording = true;
 	}
 }
 
-void Jack::Run()
+void Jack::StartLoop(int loop, bool repeat)
 {
-	set_conio_terminal_mode();
-
-	jack_nframes_t recording_time;
-	jack_midi_event_t ev;
-	ev.time = UINT_MAX;
-
-	m_recording = false;
-
-	for (;;) {
-		usleep(10000);
-		if (ev.time == UINT_MAX) {
-			if (m_buffer->Size() >= sizeof recording_time + sizeof ev.time + sizeof ev.size) {
-				m_buffer->Read((uint8_t *)&recording_time, sizeof recording_time);
-				m_buffer->Read((uint8_t *)&ev.time, sizeof ev.time);
-				m_buffer->Read((uint8_t *)&ev.size, sizeof ev.size);
-			}
-		} else {
-			if (m_buffer->Size() >= ev.size) {
-				ev.buffer = (jack_midi_data_t *)malloc(ev.size);
-				m_buffer->Read((uint8_t *)ev.buffer, ev.size);
-			}
-
-			if (m_recording) {
-				printf("Recording event for loop %d\n", m_recording_loop);
-				m_loops[m_recording_loop].AddEvent(recording_time, &ev);
-			}
-			ev.time = UINT_MAX;
-		}
-
-		if (kbhit()) {
-			char c = getch();
-
-			switch (c) {
-				case 3:
-				case 'q': return;
-
-				case 'r':
-					if (m_recording) {
-						m_recording = false;
-						m_loops[m_recording_loop].SetLength(m_recording_time);
-						m_loops[m_recording_loop].EndFromNoteCache(m_notecache);
-						printf("Finished recording loop %d\n", m_recording_loop);
-					} else {
-						m_loops[m_recording_loop].StartFromNoteCache(m_notecache);
-						m_recording_time = 0;
-						m_recording = true;
-						printf("Started recording loop %d\n", m_recording_loop);
-					}
-					break;
-
-				case '1':
-				case '2':
-				case '3':
-				case '4':
-				case '5':
-				case '6':
-				case '7':
-				case '8':
-				case '9':
-					if (!m_recording) {
-						m_recording_loop = c - '1';
-						printf("Selected recording loop %d\n", m_recording_loop);
-					}
-					break;
-
-				case 'z':
-				case 'x':
-					printf("Starting loop %d (%s)\n", m_recording_loop, c == 'x' ? "loop" : "once");
-					m_loops[m_recording_loop].Start(c == 'x');
-					break;
-
-				case 'c':
-					printf("Stopping loop %d\n", m_recording_loop);
-					m_loops[m_recording_loop].Stop();
-					break;
-
-				case 'e':
-					printf("Erasing loop %d\n", m_recording_loop);
-					m_loops[m_recording_loop].Empty();
-					break;
-			}
-		}
-	}
+	m_loops[loop].Start(repeat);
 }
+
+void Jack::StopLoop(int loop)
+{
+	m_loops[loop].Stop();
+}
+
+void Jack::EraseLoop(int loop)
+{
+	m_loops[loop].Empty();
+}
+
+bool Jack::Run()
+{
+	static jack_nframes_t recording_time;
+	static jack_midi_event_t ev;
+	static bool first = true;
+	if (first) {
+		ev.time = UINT_MAX;
+		first = false;
+	}
+
+	if (ev.time == UINT_MAX) {
+		if (m_buffer->Size() >= sizeof recording_time + sizeof ev.time + sizeof ev.size) {
+			m_buffer->Read((uint8_t *)&recording_time, sizeof recording_time);
+			m_buffer->Read((uint8_t *)&ev.time, sizeof ev.time);
+			m_buffer->Read((uint8_t *)&ev.size, sizeof ev.size);
+		}
+	} else {
+		if (m_buffer->Size() >= ev.size) {
+			ev.buffer = (jack_midi_data_t *)malloc(ev.size);
+			m_buffer->Read((uint8_t *)ev.buffer, ev.size);
+		}
+
+		if (m_recording) {
+			m_loops[m_recording_loop].AddEvent(recording_time, &ev);
+		}
+		ev.time = UINT_MAX;
+	}
+
+	return false;
+}
+

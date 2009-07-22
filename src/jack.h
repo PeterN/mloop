@@ -8,7 +8,7 @@
 #include "ringbuffer.h"
 #include "notecache.h"
 
-#define NUM_LOOPS 9
+#define NUM_LOOPS 10
 
 class Jack {
 private:
@@ -17,6 +17,8 @@ private:
 	jack_port_t   *m_input;
 	jack_port_t   *m_output;
 	jack_port_t   *m_control;
+
+	jack_nframes_t m_sample_rate;
 
 	Loop        m_loops[NUM_LOOPS];
 	RingBuffer *m_buffer;
@@ -45,7 +47,17 @@ public:
 
 	bool Connect();
 	void Disconnect();
-	void Run();
+	bool Run();
+
+	void ToggleRecording(int loop);
+	void StartLoop(int loop, bool repeat);
+	void StopLoop(int loop);
+	void EraseLoop(int loop);
+
+	bool Recording() const
+	{
+		return m_recording;
+	}
 };
 
 #endif /* JACK_H */
