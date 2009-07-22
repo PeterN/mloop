@@ -97,14 +97,41 @@ UI::~UI()
 bool UI::Run(Jack &j)
 {
 	char buf[1024];
+	int y_offs = 0;
 
-	snprintf(buf, sizeof buf, " mloop -- %d bpm", m_bpm);
 	bkgdset(color_map[1]);
 	attrset(color_map[1]);
-	mvaddstr(0, 0, buf);
+	mvaddstr(y_offs, 0, " mloop ");
+	clrtoeol();
+	y_offs++;
+
+	bkgdset(color_map[0]);
+	attrset(color_map[0]);
+	mvaddstr(y_offs, 0, " [   ] bpm");
 	clrtoeol();
 
-	mvaddstr(11, 0, status);
+	bkgdset(color_map[(m_edit_mode == EM_BPM) ? 2 : 0]);
+	attrset(color_map[(m_edit_mode == EM_BPM) ? 2 : 0]);
+	snprintf(buf, sizeof buf, "%3d", m_bpm);
+	mvaddstr(y_offs, 2, buf);
+	y_offs++;
+
+	bkgdset(color_map[0]);
+	attrset(color_map[0]);
+	snprintf(buf, sizeof buf, " Quantisation %s", m_quantise ? "on" : "off");
+	mvaddstr(y_offs, 0, buf);
+	clrtoeol();
+	y_offs++;
+
+	bkgdset(color_map[1]);
+	attrset(color_map[1]);
+	mvaddstr(y_offs, 0, " Loops");
+	clrtoeol();
+	y_offs++;
+
+	bkgdset(color_map[1]);
+	attrset(color_map[1]);
+	mvaddstr(y_offs + NUM_LOOPS, 0, status);
 	clrtoeol();
 
 	for (int i = 0; i < NUM_LOOPS; i++) {
@@ -112,7 +139,7 @@ bool UI::Run(Jack &j)
 		attrset(color_map[0]);
 
 		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs)", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i));
-		mvaddstr(i + 1, 0, buf);
+		mvaddstr(i + y_offs, 0, buf);
 		clrtoeol();
 
 		const char *c; int k = 3;
@@ -127,7 +154,7 @@ bool UI::Run(Jack &j)
 		bkgdset(color_map[(m_loop == i && m_edit_mode == EM_LOOPS) ? 2 : k]);
 		attrset(color_map[(m_loop == i && m_edit_mode == EM_LOOPS) ? 2 : k]);
 
-		mvaddstr(i + 1, 2, c);
+		mvaddstr(i + y_offs, 2, c);
 	}
 
 	if (m_edit_timer > 0) m_edit_timer--;
@@ -166,8 +193,10 @@ bool UI::Run(Jack &j)
 				if (m_edit_timer <= 0) {
 					m_bpm = 0;
 				}
-				m_bpm *= 10;
-				m_bpm += (c - '0');
+				if (m_bpm < 100) {
+					m_bpm *= 10;
+					m_bpm += (c - '0');
+				}
 				m_edit_timer = EDIT_TIMER_RESET;
 			} else {
 				m_loop = (c - '0');
@@ -206,11 +235,13 @@ bool UI::Run(Jack &j)
 
 		case '\r':
 			m_edit_mode = EM_LOOPS;
+			m_edit_timer = 0;
 			break;
 
 		case KEY_UP:
 			if (m_edit_mode == EM_BPM) {
 				m_bpm++;
+				if (m_bpm >= 1000) m_bpm = 999;
 			} else {
 				m_loop--;
 				if (m_loop == -1) m_loop = NUM_LOOPS - 1;
@@ -220,6 +251,7 @@ bool UI::Run(Jack &j)
 		case KEY_DOWN:
 			if (m_edit_mode == EM_BPM) {
 				m_bpm--;
+				if (m_bpm < 0) m_bpm = 0;
 			} else {
 				m_loop++;
 				if (m_loop == NUM_LOOPS) m_loop = 0;
