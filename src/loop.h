@@ -11,8 +11,8 @@
 
 enum LoopState {
 	LS_IDLE,
-	LS_PLAY_LOOP,
-	LS_PLAY_ONCE,
+	LS_SYNC,
+	LS_PLAY,
 	LS_STOPPING,
 	LS_RECORDING,
 };
@@ -25,6 +25,7 @@ private:
 	jack_nframes_t m_length;   ///< Length of loop, in samples.
 	jack_nframes_t m_position; ///< Current position of loop, in samples.
 	LoopState      m_state;
+	bool           m_loop;
 
 	EventList           m_events;
 	EventList::iterator m_iterator;
@@ -42,7 +43,7 @@ public:
 	}
 
 	void SetLength(jack_nframes_t length);
-	void Start(bool loop);
+	void Start(bool loop, bool sync);
 	void Stop();
 	void Empty();
 
@@ -62,6 +63,11 @@ public:
 	jack_nframes_t Position() const
 	{
 		return m_position;
+	}
+
+	bool Looping() const
+	{
+		return m_loop;
 	}
 };
 

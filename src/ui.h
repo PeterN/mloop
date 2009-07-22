@@ -15,6 +15,8 @@ private:
 	int m_loop;
 	int m_bpm;
 	bool m_quantise;
+	bool m_delay_record;
+	bool m_sync_playback;
 
 	EditMode m_edit_mode;
 	int m_edit_timer;

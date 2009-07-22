@@ -24,6 +24,7 @@ private:
 	RingBuffer *m_buffer;
 
 	bool           m_recording;
+	bool           m_delay_record;
 	int            m_recording_loop;
 	jack_nframes_t m_recording_time;
 
@@ -49,8 +50,8 @@ public:
 	void Disconnect();
 	bool Run();
 
-	void ToggleRecording(int loop, int bpm);
-	void StartLoop(int loop, bool repeat);
+	void ToggleRecording(int loop, int bpm, bool delay);
+	void StartLoop(int loop, bool repeat, bool sync);
 	void StopLoop(int loop);
 	void EraseLoop(int loop);
 
@@ -72,6 +73,11 @@ public:
 	LoopState GetLoopState(int loop)
 	{
 		return m_loops[loop].State();
+	}
+
+	bool LoopLooping(int loop)
+	{
+		return m_loops[loop].Looping();
 	}
 };
 

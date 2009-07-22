@@ -43,7 +43,7 @@ void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 	m_position++;
 
 	if (m_position == m_length) {
-		if (m_state == LS_PLAY_ONCE) {
+		if (!m_loop) {
 			m_state = LS_IDLE;
 		}
 		m_position = 0;
@@ -66,10 +66,10 @@ void Loop::SetLength(jack_nframes_t length)
 	m_length = length;
 }
 
-void Loop::Start(bool loop)
+void Loop::Start(bool loop, bool sync)
 {
-	if (m_state == LS_PLAY_LOOP || m_state == LS_PLAY_ONCE) {
-		m_state = loop ? LS_PLAY_LOOP : LS_PLAY_ONCE;
+	if (m_state == LS_PLAY || m_state == LS_SYNC) {
+		m_loop = loop;
 	}
 
 	if (m_state != LS_IDLE) return;
@@ -78,13 +78,16 @@ void Loop::Start(bool loop)
 
 	m_position = 0;
 	m_iterator = m_events.begin();
-	m_state = loop ? LS_PLAY_LOOP : LS_PLAY_ONCE;
+	m_loop = loop;
+	m_state = sync ? LS_PLAY : LS_PLAY;
 }
 
 void Loop::Stop()
 {
-	if (m_state == LS_PLAY_ONCE || m_state == LS_PLAY_LOOP) {
+	if (m_state == LS_PLAY) {
 		m_state = LS_STOPPING;
+	} else if (m_state == LS_SYNC) {
+		m_state = LS_IDLE;
 	}
 }
 

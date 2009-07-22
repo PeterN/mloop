@@ -84,6 +84,8 @@ UI::UI()
 	m_loop = 0;
 	m_bpm = 120;
 	m_quantise = false;
+	m_delay_record = false;
+	m_sync_playback = false;
 	m_edit_mode = EM_LOOPS;
 	m_edit_timer = 0;
 }
@@ -118,7 +120,21 @@ bool UI::Run(Jack &j)
 
 	bkgdset(color_map[0]);
 	attrset(color_map[0]);
-	snprintf(buf, sizeof buf, " Quantisation %s", m_quantise ? "on" : "off");
+	snprintf(buf, sizeof buf, " Quantisation: %s", m_quantise ? "on" : "off");
+	mvaddstr(y_offs, 0, buf);
+	clrtoeol();
+	y_offs++;
+
+	bkgdset(color_map[0]);
+	attrset(color_map[0]);
+	snprintf(buf, sizeof buf, " Delay before record: %s", m_delay_record ? "on" : "off");
+	mvaddstr(y_offs, 0, buf);
+	clrtoeol();
+	y_offs++;
+
+	bkgdset(color_map[0]);
+	attrset(color_map[0]);
+	snprintf(buf, sizeof buf, " Synchronise playback: %s", m_sync_playback ? "on" : "off");
 	mvaddstr(y_offs, 0, buf);
 	clrtoeol();
 	y_offs++;
@@ -145,10 +161,10 @@ bool UI::Run(Jack &j)
 		const char *c; int k = 3;
 		switch (j.GetLoopState(i)) {
 			case LS_IDLE: c = " "; k = 0; break;
-			case LS_PLAY_ONCE: c = ">"; break;
-			case LS_PLAY_LOOP: c = "»"; break;
+			case LS_PLAY: c = j.LoopLooping(i) ? "»" : ">"; break;
 			case LS_STOPPING: c = "·"; break;
 			case LS_RECORDING: c = "R"; break;
+			case LS_SYNC: c = "~"; break;
 		}
 
 		bkgdset(color_map[(m_loop == i && m_edit_mode == EM_LOOPS) ? 2 : k]);
@@ -171,7 +187,7 @@ bool UI::Run(Jack &j)
 			return true;
 
 		case 'r':
-			j.ToggleRecording(m_loop, m_quantise ? m_bpm : 0);
+			j.ToggleRecording(m_loop, m_quantise ? m_bpm : 0, m_delay_record);
 			if (j.Recording()) {
 				snprintf(status, sizeof status, "Start recording loop %d", m_loop);
 			} else {
@@ -207,7 +223,7 @@ bool UI::Run(Jack &j)
 		case 'z':
 		case 'x':
 			snprintf(status, sizeof status, "Starting loop %d (%s)", m_loop, c == 'x' ? "loop" : "once");
-			j.StartLoop(m_loop, c == 'x');
+			j.StartLoop(m_loop, c == 'x', m_sync_playback);
 			break;
 
 		case 'c':
@@ -223,6 +239,14 @@ bool UI::Run(Jack &j)
 		case 'q':
 			m_quantise = !m_quantise;
 			snprintf(status, sizeof status, "Set quantise %s", m_quantise ? "on" : "off");
+			break;
+
+		case 'd':
+			m_delay_record = !m_delay_record;
+			break;
+
+		case 's':
+			m_sync_playback = !m_sync_playback;
 			break;
 
 		case 'b':

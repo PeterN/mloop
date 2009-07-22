@@ -107,6 +107,8 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 					m_buffer->Write((uint8_t *)&ev.time, sizeof ev.time);
 					m_buffer->Write((uint8_t *)&ev.size, sizeof ev.size);
 					m_buffer->Write((uint8_t *)ev.buffer, ev.size);
+
+					m_delay_record = false;
 				} else {
 					fprintf(stderr, "Buffer full, dropping input!\n");
 				}
@@ -124,7 +126,7 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 		}
 	}
 
-	if (m_recording) {
+	if (m_recording && !m_delay_record) {
 		m_recording_time += nframes;
 		m_loops[m_recording_loop].SetLength(m_recording_time);
 	}
@@ -132,7 +134,7 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 	return 0;
 }
 
-void Jack::ToggleRecording(int loop, int bpm)
+void Jack::ToggleRecording(int loop, int bpm, bool delay)
 {
 	if (m_recording) {
 		m_recording = false;
@@ -151,12 +153,13 @@ void Jack::ToggleRecording(int loop, int bpm)
 		m_loops[m_recording_loop].StartFromNoteCache(m_notecache);
 		m_recording_time = 0;
 		m_recording = true;
+		m_delay_record = delay;
 	}
 }
 
-void Jack::StartLoop(int loop, bool repeat)
+void Jack::StartLoop(int loop, bool repeat, bool sync)
 {
-	m_loops[loop].Start(repeat);
+	m_loops[loop].Start(repeat, sync);
 }
 
 void Jack::StopLoop(int loop)
