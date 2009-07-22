@@ -8,6 +8,6 @@ def configure(conf):
 def build(bld):
 	bld.new_task_gen(
 		features = 'cxx cprogram',
-		source = 'jack.cpp loop.cpp mloop.cpp ui.cpp',
+		source = 'jack.cpp loop.cpp mloop.cpp notecache.cpp ui.cpp',
 		target = 'mloop',
 		uselib = 'JACK NCURSES')

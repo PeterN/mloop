@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <stdio.h>
 #include <unistd.h>
 #include <limits.h>
 #include <jack/jack.h>
