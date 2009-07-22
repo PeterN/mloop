@@ -11,14 +11,14 @@ Jack::Jack()
 {
 	m_connected = false;
 	m_recording = false;
-	m_buffer = new RingBuffer(2048);
+	m_loop_buffer = new RingBuffer(2048);
 	m_notecache.Reset();
 }
 
 Jack::~Jack()
 {
 	Disconnect();
-	delete m_buffer;
+	delete m_loop_buffer;
 }
 
 bool Jack::Connect()
@@ -102,11 +102,11 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 				 * need for extra logic to determine if the buffer is full
 				 * or empty.
 				 */
-				if (m_buffer->Free() > sizeof ev.time + sizeof ev.size + ev.size) {
-					m_buffer->Write((uint8_t *)&m_recording_time, sizeof m_recording_time);
-					m_buffer->Write((uint8_t *)&ev.time, sizeof ev.time);
-					m_buffer->Write((uint8_t *)&ev.size, sizeof ev.size);
-					m_buffer->Write((uint8_t *)ev.buffer, ev.size);
+				if (m_loop_buffer->Free() > sizeof ev.time + sizeof ev.size + ev.size) {
+					m_loop_buffer->Write((uint8_t *)&m_recording_time, sizeof m_recording_time);
+					m_loop_buffer->Write((uint8_t *)&ev.time, sizeof ev.time);
+					m_loop_buffer->Write((uint8_t *)&ev.size, sizeof ev.size);
+					m_loop_buffer->Write((uint8_t *)ev.buffer, ev.size);
 
 					m_delay_record = false;
 				} else {
@@ -183,15 +183,15 @@ bool Jack::Run()
 	}
 
 	if (ev.time == UINT_MAX) {
-		if (m_buffer->Size() >= sizeof recording_time + sizeof ev.time + sizeof ev.size) {
-			m_buffer->Read((uint8_t *)&recording_time, sizeof recording_time);
-			m_buffer->Read((uint8_t *)&ev.time, sizeof ev.time);
-			m_buffer->Read((uint8_t *)&ev.size, sizeof ev.size);
+		if (m_loop_buffer->Size() >= sizeof recording_time + sizeof ev.time + sizeof ev.size) {
+			m_loop_buffer->Read((uint8_t *)&recording_time, sizeof recording_time);
+			m_loop_buffer->Read((uint8_t *)&ev.time, sizeof ev.time);
+			m_loop_buffer->Read((uint8_t *)&ev.size, sizeof ev.size);
 		}
 	} else {
-		if (m_buffer->Size() >= ev.size) {
+		if (m_loop_buffer->Size() >= ev.size) {
 			ev.buffer = (jack_midi_data_t *)malloc(ev.size);
-			m_buffer->Read((uint8_t *)ev.buffer, ev.size);
+			m_loop_buffer->Read((uint8_t *)ev.buffer, ev.size);
 		}
 
 		if (m_recording) {

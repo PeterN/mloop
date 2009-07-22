@@ -21,7 +21,7 @@ private:
 	jack_nframes_t m_sample_rate;
 
 	Loop        m_loops[NUM_LOOPS];
-	RingBuffer *m_buffer;
+	RingBuffer *m_loop_buffer;
 
 	bool           m_recording;
 	bool           m_delay_record;
