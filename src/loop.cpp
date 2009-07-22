@@ -68,6 +68,10 @@ void Loop::SetLength(jack_nframes_t length)
 
 void Loop::Start(bool loop)
 {
+	if (m_state == LS_PLAY_LOOP || m_state == LS_PLAY_ONCE) {
+		m_state = loop ? LS_PLAY_LOOP : LS_PLAY_ONCE;
+	}
+
 	if (m_state != LS_IDLE) return;
 
 	if (m_length == 0) return;
