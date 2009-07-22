@@ -60,24 +60,34 @@ public:
 		return m_recording;
 	}
 
-	float LoopLength(int loop)
+	float LoopLength(int loop) const
 	{
 		return (float)m_loops[loop].Length() / m_sample_rate;
 	}
 
-	float LoopPosition(int loop)
+	float LoopPosition(int loop) const
 	{
 		return (float)m_loops[loop].Position() / m_sample_rate;
 	}
 
-	LoopState GetLoopState(int loop)
+	LoopState GetLoopState(int loop) const
 	{
 		return m_loops[loop].State();
 	}
 
-	bool LoopLooping(int loop)
+	bool LoopLooping(int loop) const
 	{
 		return m_loops[loop].Looping();
+	}
+
+	void SetTempo(int loop, float tempo)
+	{
+		m_loops[loop].SetTempo(tempo);
+	}
+
+	float GetTempo(int loop) const
+	{
+		return m_loops[loop].Tempo();
 	}
 };
 

@@ -154,7 +154,7 @@ bool UI::Run(Jack &j)
 		bkgdset(color_map[0]);
 		attrset(color_map[0]);
 
-		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs)", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i));
+		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs) Tempo: %0.1f%%", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i), j.GetTempo(i) * 100);
 		mvaddstr(i + y_offs, 0, buf);
 		clrtoeol();
 
@@ -279,6 +279,18 @@ bool UI::Run(Jack &j)
 			} else {
 				m_loop++;
 				if (m_loop == NUM_LOOPS) m_loop = 0;
+			}
+			break;
+
+		case KEY_LEFT:
+			if (m_edit_mode == EM_LOOPS) {
+				j.SetTempo(m_loop, j.GetTempo(m_loop) - 0.001);
+			}
+			break;
+
+		case KEY_RIGHT:
+			if (m_edit_mode == EM_LOOPS) {
+				j.SetTempo(m_loop, j.GetTempo(m_loop) + 0.001);
 			}
 			break;
 

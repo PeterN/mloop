@@ -6,6 +6,7 @@ Loop::Loop()
 {
 	m_length = 0;
 	m_position = 0;
+	m_tempo = 1.0;
 	m_state = LS_IDLE;
 }
 
@@ -40,9 +41,9 @@ void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 		jack_midi_event_write(port_buffer, frame, event.buffer, event.size);
 	}
 
-	m_position++;
+	m_position += m_tempo;
 
-	if (m_position == m_length) {
+	if (m_position >= m_length) {
 		if (!m_loop) {
 			m_state = LS_IDLE;
 		}

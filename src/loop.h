@@ -23,9 +23,10 @@ typedef std::list<Event> EventList;
 class Loop {
 private:
 	jack_nframes_t m_length;   ///< Length of loop, in samples.
-	jack_nframes_t m_position; ///< Current position of loop, in samples.
+	float          m_position; ///< Current position of loop, in samples.
 	LoopState      m_state;
 	bool           m_loop;
+	float          m_tempo;
 
 	EventList           m_events;
 	EventList::iterator m_iterator;
@@ -55,14 +56,24 @@ public:
 		return m_state;
 	}
 
+	void SetTempo(float tempo)
+	{
+		m_tempo = tempo;
+	}
+
+	float Tempo() const
+	{
+		return m_tempo;
+	}
+
 	jack_nframes_t Length() const
 	{
-		return m_length;
+		return m_length / m_tempo;
 	}
 
 	jack_nframes_t Position() const
 	{
-		return m_position;
+		return m_position / m_tempo;
 	}
 
 	bool Looping() const
