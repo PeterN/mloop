@@ -102,12 +102,8 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 				 * need for extra logic to determine if the buffer is full
 				 * or empty.
 				 */
-				if (m_loop_buffer->Free() > sizeof ev.time + sizeof ev.size + ev.size) {
-					ev.time += m_recording_time;
-					m_loop_buffer->Write((uint8_t *)&ev.time, sizeof ev.time);
-					m_loop_buffer->Write((uint8_t *)&ev.size, sizeof ev.size);
-					m_loop_buffer->Write((uint8_t *)ev.buffer, ev.size);
-
+				ev.time += m_recording_time;
+				if (m_loop_buffer->PushEvent(ev)) {
 					m_delay_record = false;
 				} else {
 					fprintf(stderr, "Buffer full, dropping input!\n");
@@ -174,28 +170,13 @@ void Jack::EraseLoop(int loop)
 
 bool Jack::Run()
 {
-	static jack_midi_event_t ev;
-	static bool first = true;
-	if (first) {
-		ev.time = UINT_MAX;
-		first = false;
-	}
-
-	if (ev.time == UINT_MAX) {
-		if (m_loop_buffer->Size() >= sizeof ev.time + sizeof ev.size) {
-			m_loop_buffer->Read((uint8_t *)&ev.time, sizeof ev.time);
-			m_loop_buffer->Read((uint8_t *)&ev.size, sizeof ev.size);
-		}
-	} else {
-		if (m_loop_buffer->Size() >= ev.size) {
-			ev.buffer = (jack_midi_data_t *)malloc(ev.size);
-			m_loop_buffer->Read((uint8_t *)ev.buffer, ev.size);
-		}
-
+	jack_midi_event_t ev;
+	if (m_loop_buffer->PopEvent(ev)) {
 		if (m_recording) {
 			m_loops[m_recording_loop].AddEvent(&ev);
+		} else {
+			free(ev.buffer);
 		}
-		ev.time = UINT_MAX;
 	}
 
 	return false;

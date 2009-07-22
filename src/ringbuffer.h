@@ -24,7 +24,7 @@ public:
 		free(m_buffer);
 	}
 
-	void Write(uint8_t *buffer, size_t length)
+	void Write(const uint8_t *buffer, size_t length)
 	{
 		while (length--) {
 			if (m_write == m_end) m_write = m_buffer;
@@ -38,6 +38,15 @@ public:
 			if (m_read == m_end) m_read = m_buffer;
 			*buffer++ = *m_read++;
 		}
+	}
+
+	uint8_t *Peek(uint8_t *buffer, size_t length, uint8_t *peek)
+	{
+		while (length--) {
+			if (peek == m_end) peek = m_buffer;
+			*buffer++ = *peek++;
+		}
+		return peek;
 	}
 
 	size_t Size() const
@@ -56,6 +65,9 @@ public:
 		m_write = m_buffer;
 		m_read = m_buffer;
 	}
+
+	bool PushEvent(jack_midi_event_t &event);
+	bool PopEvent(jack_midi_event_t &event);
 };
 
 #endif /* RINGBUFFER_H */
