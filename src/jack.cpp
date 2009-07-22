@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <stdio.h>
 #include <unistd.h>
 #include <limits.h>
 #include <jack/jack.h>
@@ -108,7 +107,7 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 					m_buffer->Write((uint8_t *)&ev.size, sizeof ev.size);
 					m_buffer->Write((uint8_t *)ev.buffer, ev.size);
 				} else {
-					printf("Buffer full, dropping input!\n");
+					fprintf(stderr, "Buffer full, dropping input!\n");
 				}
 			}
 
@@ -126,6 +125,7 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 
 	if (m_recording) {
 		m_recording_time += nframes;
+		m_loops[m_recording_loop].SetLength(m_recording_time);
 	}
 
 	return 0;
@@ -136,9 +136,11 @@ void Jack::ToggleRecording(int loop)
 	if (m_recording) {
 		m_recording = false;
 		m_loops[m_recording_loop].SetLength(m_recording_time);
+		m_loops[m_recording_loop].SetState(LS_IDLE);
 		m_loops[m_recording_loop].EndFromNoteCache(m_notecache);
 	} else {
 		m_recording_loop = loop;
+		m_loops[m_recording_loop].SetState(LS_RECORDING);
 		m_loops[m_recording_loop].StartFromNoteCache(m_notecache);
 		m_recording_time = 0;
 		m_recording = true;

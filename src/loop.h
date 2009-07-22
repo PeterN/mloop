@@ -14,6 +14,7 @@ enum LoopState {
 	LS_PLAY_LOOP,
 	LS_PLAY_ONCE,
 	LS_STOPPING,
+	LS_RECORDING,
 };
 
 typedef std::pair<jack_midi_event_t, jack_nframes_t> Event;
@@ -35,6 +36,11 @@ public:
 	void PlayFrame(void *port_buffer, jack_nframes_t frame);
 	void AddEvent(jack_nframes_t position, jack_midi_event_t *event);
 
+	void SetState(LoopState state)
+	{
+		m_state = state;
+	}
+
 	void SetLength(jack_nframes_t length);
 	void Start(bool loop);
 	void Stop();
@@ -42,6 +48,21 @@ public:
 
 	void StartFromNoteCache(NoteCache &cache);
 	void EndFromNoteCache(NoteCache &cache);
+
+	LoopState State() const
+	{
+		return m_state;
+	}
+
+	jack_nframes_t Length() const
+	{
+		return m_length;
+	}
+
+	jack_nframes_t Position() const
+	{
+		return m_position;
+	}
 };
 
 #endif /* LOOP_H */

@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <stdio.h>
 #include "loop.h"
 
 Loop::Loop()
@@ -16,11 +15,9 @@ Loop::~Loop()
 
 void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 {
-	if (m_state == LS_IDLE) return;
+	if (m_state == LS_IDLE || m_state == LS_RECORDING) return;
 
 	if (m_state == LS_STOPPING) {
-		printf("Stopping, so send all notes off!\n");
-
 		uint8_t buffer[3];
 		buffer[1] = 0x78;
 		buffer[2] = 0;
@@ -49,7 +46,6 @@ void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 		if (m_state == LS_PLAY_ONCE) {
 			m_state = LS_IDLE;
 		}
-		printf("Completed %u frames\n", m_position);
 		m_position = 0;
 		m_iterator = m_events.begin();
 	}
@@ -65,7 +61,7 @@ void Loop::AddEvent(jack_nframes_t position, jack_midi_event_t *event)
 
 void Loop::SetLength(jack_nframes_t length)
 {
-	if (m_state != LS_IDLE) return;
+	if (m_state != LS_RECORDING) return;
 
 	m_length = length;
 }

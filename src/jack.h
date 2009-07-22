@@ -58,6 +58,21 @@ public:
 	{
 		return m_recording;
 	}
+
+	float LoopLength(int loop)
+	{
+		return (float)m_loops[loop].Length() / m_sample_rate;
+	}
+
+	float LoopPosition(int loop)
+	{
+		return (float)m_loops[loop].Position() / m_sample_rate;
+	}
+
+	LoopState GetLoopState(int loop)
+	{
+		return m_loops[loop].State();
+	}
 };
 
 #endif /* JACK_H */
