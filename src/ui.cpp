@@ -54,41 +54,51 @@ int getch()
 }
 */
 
-int bpm = 120;
 int color_map[4];
 char status[1024];
-bool quantise = false;
+
+UI::UI()
+{
+	set_conio_terminal_mode();
+
+	initscr();
+	noecho();
+	nonl();
+
+	intrflush(stdscr, false);
+	keypad(stdscr, true);
+	nodelay(stdscr, true);
+	raw();
+
+	start_color();
+	init_pair(1, COLOR_WHITE, COLOR_BLUE);
+	init_pair(2, COLOR_BLACK, COLOR_CYAN);
+	init_pair(3, COLOR_YELLOW, COLOR_RED);
+
+	for (int i = 0; i < 4; i++) {
+		color_map[i] = COLOR_PAIR(i);
+	}
+
+	snprintf(status, sizeof status, "...");
+
+	m_loop = 0;
+	m_bpm = 120;
+	m_quantise = false;
+	m_edit_mode = EM_LOOPS;
+	m_edit_timer = 0;
+}
+
+UI::~UI()
+{
+	endwin();
+	reset_terminal_mode();
+}
 
 bool UI::Run(Jack &j)
 {
 	char buf[1024];
-	static bool first = true;
-	if (first) {
-		set_conio_terminal_mode();
-		first = false;
-		m_loop = 0;
 
-		initscr();
-		noecho();
-		nonl();
-		intrflush(stdscr, false);
-		keypad(stdscr, true);
-		nodelay(stdscr, true);
-		raw();
-
-		start_color();
-		init_pair(1, COLOR_WHITE, COLOR_BLUE);
-		init_pair(2, COLOR_BLACK, COLOR_CYAN);
-		init_pair(3, COLOR_YELLOW, COLOR_RED);
-
-		for (int i = 0; i < 4; i++) {
-			color_map[i] = COLOR_PAIR(i);
-		}
-
-		snprintf(status, sizeof status, "...");
-	}
-
-	snprintf(buf, sizeof buf, " mloop -- %d bpm", bpm);
+	snprintf(buf, sizeof buf, " mloop -- %d bpm", m_bpm);
 	bkgdset(color_map[1]);
 	attrset(color_map[1]);
 	mvaddstr(0, 0, buf);
@@ -101,7 +111,7 @@ bool UI::Run(Jack &j)
 		bkgdset(color_map[0]);
 		attrset(color_map[0]);
 
-		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs)", i, bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), bpm * j.LoopLength(i) / 60.0, j.LoopLength(i));
+		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs)", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i));
 		mvaddstr(i + 1, 0, buf);
 		clrtoeol();
 
@@ -114,11 +124,13 @@ bool UI::Run(Jack &j)
 			case LS_RECORDING: c = "R"; break;
 		}
 
-		bkgdset(color_map[m_loop == i ? 2 : k]);
-		attrset(color_map[m_loop == i ? 2 : k]);
+		bkgdset(color_map[(m_loop == i && m_edit_mode == EM_LOOPS) ? 2 : k]);
+		attrset(color_map[(m_loop == i && m_edit_mode == EM_LOOPS) ? 2 : k]);
 
 		mvaddstr(i + 1, 2, c);
 	}
+
+	if (m_edit_timer > 0) m_edit_timer--;
 
 	if (!kbhit()) {
 		refresh();
@@ -129,12 +141,10 @@ bool UI::Run(Jack &j)
 
 	switch (c) {
 		case 3:
-			endwin();
-			reset_terminal_mode();
 			return true;
 
 		case 'r':
-			j.ToggleRecording(m_loop, quantise ? bpm : 0);
+			j.ToggleRecording(m_loop, m_quantise ? m_bpm : 0);
 			if (j.Recording()) {
 				snprintf(status, sizeof status, "Start recording loop %d", m_loop);
 			} else {
@@ -152,8 +162,17 @@ bool UI::Run(Jack &j)
 		case '7':
 		case '8':
 		case '9':
-			m_loop = (c - '0');
-			snprintf(status, sizeof status, "Selected loop %d", m_loop);
+			if (m_edit_mode == EM_BPM) {
+				if (m_edit_timer <= 0) {
+					m_bpm = 0;
+				}
+				m_bpm *= 10;
+				m_bpm += (c - '0');
+				m_edit_timer = EDIT_TIMER_RESET;
+			} else {
+				m_loop = (c - '0');
+				snprintf(status, sizeof status, "Selected loop %d", m_loop);
+			}
 			break;
 
 		case 'z':
@@ -173,18 +192,45 @@ bool UI::Run(Jack &j)
 			break;
 
 		case 'q':
-			quantise = !quantise;
-			snprintf(status, sizeof status, "Set quantise %s", quantise ? "on" : "off");
+			m_quantise = !m_quantise;
+			snprintf(status, sizeof status, "Set quantise %s", m_quantise ? "on" : "off");
+			break;
+
+		case 'b':
+			if (m_edit_mode == EM_BPM) {
+				m_edit_mode = EM_LOOPS;
+			} else {
+				m_edit_mode = EM_BPM;
+			}
+			break;
+
+		case '\r':
+			m_edit_mode = EM_LOOPS;
 			break;
 
 		case KEY_UP:
-			m_loop--;
-			if (m_loop == -1) m_loop = NUM_LOOPS - 1;
+			if (m_edit_mode == EM_BPM) {
+				m_bpm++;
+			} else {
+				m_loop--;
+				if (m_loop == -1) m_loop = NUM_LOOPS - 1;
+			}
 			break;
 
 		case KEY_DOWN:
-			m_loop++;
-			if (m_loop == NUM_LOOPS) m_loop = 0;
+			if (m_edit_mode == EM_BPM) {
+				m_bpm--;
+			} else {
+				m_loop++;
+				if (m_loop == NUM_LOOPS) m_loop = 0;
+			}
+			break;
+
+		case KEY_BACKSPACE:
+			if (m_edit_mode == EM_BPM) {
+				m_bpm /= 10;
+				m_edit_timer = EDIT_TIMER_RESET;
+			}
 			break;
 	}
 
