@@ -103,7 +103,7 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 				 * or empty.
 				 */
 				if (m_loop_buffer->Free() > sizeof ev.time + sizeof ev.size + ev.size) {
-					m_loop_buffer->Write((uint8_t *)&m_recording_time, sizeof m_recording_time);
+					ev.time += m_recording_time;
 					m_loop_buffer->Write((uint8_t *)&ev.time, sizeof ev.time);
 					m_loop_buffer->Write((uint8_t *)&ev.size, sizeof ev.size);
 					m_loop_buffer->Write((uint8_t *)ev.buffer, ev.size);
@@ -174,7 +174,6 @@ void Jack::EraseLoop(int loop)
 
 bool Jack::Run()
 {
-	static jack_nframes_t recording_time;
 	static jack_midi_event_t ev;
 	static bool first = true;
 	if (first) {
@@ -183,8 +182,7 @@ bool Jack::Run()
 	}
 
 	if (ev.time == UINT_MAX) {
-		if (m_loop_buffer->Size() >= sizeof recording_time + sizeof ev.time + sizeof ev.size) {
-			m_loop_buffer->Read((uint8_t *)&recording_time, sizeof recording_time);
+		if (m_loop_buffer->Size() >= sizeof ev.time + sizeof ev.size) {
 			m_loop_buffer->Read((uint8_t *)&ev.time, sizeof ev.time);
 			m_loop_buffer->Read((uint8_t *)&ev.size, sizeof ev.size);
 		}
@@ -195,7 +193,7 @@ bool Jack::Run()
 		}
 
 		if (m_recording) {
-			m_loops[m_recording_loop].AddEvent(recording_time, &ev);
+			m_loops[m_recording_loop].AddEvent(&ev);
 		}
 		ev.time = UINT_MAX;
 	}

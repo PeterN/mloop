@@ -17,8 +17,7 @@ enum LoopState {
 	LS_RECORDING,
 };
 
-typedef std::pair<jack_midi_event_t, jack_nframes_t> Event;
-typedef std::list<Event> EventList;
+typedef std::list<jack_midi_event_t> EventList;
 
 class Loop {
 private:
@@ -36,7 +35,7 @@ public:
 	~Loop();
 
 	void PlayFrame(void *port_buffer, jack_nframes_t frame);
-	void AddEvent(jack_nframes_t position, jack_midi_event_t *event);
+	void AddEvent(jack_midi_event_t *event);
 
 	void SetState(LoopState state)
 	{

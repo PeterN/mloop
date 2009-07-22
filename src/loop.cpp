@@ -33,10 +33,8 @@ void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 	}
 
 	for (; m_iterator != m_events.end(); ++m_iterator) {
-
-		jack_midi_event_t &event = (*m_iterator).first;
-		jack_nframes_t position = (*m_iterator).second;
-		if (event.time + position > m_position) break;
+		jack_midi_event_t &event = *m_iterator;
+		if (event.time > m_position) break;
 
 		jack_midi_event_write(port_buffer, frame, event.buffer, event.size);
 	}
@@ -52,12 +50,9 @@ void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 	}
 }
 
-void Loop::AddEvent(jack_nframes_t position, jack_midi_event_t *event)
+void Loop::AddEvent(jack_midi_event_t *event)
 {
-	Event e;
-	e.first = *event;
-	e.second = position;
-	m_events.push_back(e);
+	m_events.push_back(*event);
 }
 
 void Loop::SetLength(jack_nframes_t length)
@@ -109,7 +104,7 @@ void Loop::StartFromNoteCache(NoteCache &cache)
 				event.buffer = buffer;
 				event.size = 3;
 
-				AddEvent(0, &event);
+				AddEvent(&event);
 			}
 		}
 	}
@@ -128,11 +123,11 @@ void Loop::EndFromNoteCache(NoteCache &cache)
 				buffer[2] = 0;
 
 				jack_midi_event_t event;
-				event.time = 0;
+				event.time = m_length - 1;
 				event.buffer = buffer;
 				event.size = 3;
 
-				AddEvent(m_length - 1, &event);
+				AddEvent(&event);
 			}
 		}
 	}
@@ -146,7 +141,7 @@ void Loop::Empty()
 	m_position = 0;
 
 	for (m_iterator = m_events.begin(); m_iterator != m_events.end(); ++m_iterator) {
-		jack_midi_event_t &event = (*m_iterator).first;
+		jack_midi_event_t &event = *m_iterator;
 		free(event.buffer);
 	}
 
