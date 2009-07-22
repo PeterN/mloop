@@ -3,6 +3,17 @@
 #include <stdio.h>
 #include "loop.h"
 
+Loop::Loop()
+{
+	m_length = 0;
+	m_position = 0;
+	m_state = LS_IDLE;
+}
+
+Loop::~Loop()
+{
+}
+
 void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 {
 	if (m_state == LS_IDLE) return;

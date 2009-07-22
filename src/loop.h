@@ -29,6 +29,9 @@ private:
 	EventList::iterator m_iterator;
 
 public:
+	Loop();
+	~Loop();
+
 	void PlayFrame(void *port_buffer, jack_nframes_t frame);
 	void AddEvent(jack_nframes_t position, jack_midi_event_t *event);
 
