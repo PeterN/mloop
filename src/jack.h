@@ -55,6 +55,11 @@ public:
 	void StopLoop(int loop);
 	void EraseLoop(int loop);
 
+	bool Connected() const
+	{
+		return m_connected;
+	}
+
 	bool Recording() const
 	{
 		return m_recording;

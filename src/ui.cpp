@@ -269,6 +269,14 @@ bool UI::Run(Jack &j)
 		case UIKEY_SAVE:
 			j.Save();
 			break;
+
+		case UIKEY_RECONNECT:
+			if (!j.Connected()) {
+				if (j.Connect()) {
+					snprintf(status, sizeof status, "Reconnected to JACK");
+				}
+			}
+			break;
 	}
 
 	return false;

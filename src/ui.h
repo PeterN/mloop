@@ -41,5 +41,6 @@ public:
 #define UIKEY_BPM 'b'
 #define UIKEY_TEMPO 't'
 #define UIKEY_SAVE 'S'
+#define UIKEY_RECONNECT 18
 
 #endif /* UI_H */
