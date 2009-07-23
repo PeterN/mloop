@@ -5,33 +5,9 @@
 #include <string.h>
 #include <curses.h>
 #include <sys/select.h>
-#include <termios.h>
 #include "jack.h"
 #include "loop.h"
 #include "ui.h"
-
-struct termios orig_termios;
-
-void reset_terminal_mode()
-{
-	tcsetattr(0, TCSANOW, &orig_termios);
-}
-
-void set_conio_terminal_mode()
-{
-	struct termios new_termios;
-
-	/* take two copies - one for now, one for later */
-	tcgetattr(0, &orig_termios);
-#if 0
-	memcpy(&new_termios, &orig_termios, sizeof(new_termios));
-
-	/* register cleanup handler, and set the new terminal mode */
-	atexit(reset_terminal_mode);
-	cfmakeraw(&new_termios);
-	tcsetattr(0, TCSANOW, &new_termios);
-#endif
-}
 
 int kbhit()
 {
@@ -41,31 +17,14 @@ int kbhit()
 	return select(1, &fds, NULL, NULL, &tv);
 }
 
-/*
-int getch()
-{
-	int r;
-	unsigned char c;
-	if ((r = read(0, &c, sizeof(c))) < 0) {
-		return r;
-	} else {
-		return c;
-	}
-}
-*/
-
 int color_map[4];
 char status[1024];
 
 UI::UI()
 {
-	set_conio_terminal_mode();
-
 	initscr();
 	noecho();
-	nonl();
 
-	intrflush(stdscr, false);
 	keypad(stdscr, true);
 	nodelay(stdscr, true);
 	raw();
@@ -93,12 +52,10 @@ UI::UI()
 UI::~UI()
 {
 	endwin();
-	reset_terminal_mode();
 }
 
 bool UI::Run(Jack &j)
 {
-	char buf[1024];
 	int y_offs = 0;
 
 	bkgdset(color_map[1]);
@@ -114,28 +71,24 @@ bool UI::Run(Jack &j)
 
 	bkgdset(color_map[(m_edit_mode == EM_BPM) ? 2 : 0]);
 	attrset(color_map[(m_edit_mode == EM_BPM) ? 2 : 0]);
-	snprintf(buf, sizeof buf, "%3d", m_bpm);
-	mvaddstr(y_offs, 2, buf);
+	mvprintw(y_offs, 2, "%3d", m_bpm);
 	y_offs++;
 
 	bkgdset(color_map[0]);
 	attrset(color_map[0]);
-	snprintf(buf, sizeof buf, " Quantisation: %s", m_quantise ? "on" : "off");
-	mvaddstr(y_offs, 0, buf);
+	mvprintw(y_offs, 0, " Quantisation: %s", m_quantise ? "on" : "off");
 	clrtoeol();
 	y_offs++;
 
 	bkgdset(color_map[0]);
 	attrset(color_map[0]);
-	snprintf(buf, sizeof buf, " Delay before record: %s", m_delay_record ? "on" : "off");
-	mvaddstr(y_offs, 0, buf);
+	mvprintw(y_offs, 0, " Delay before record: %s", m_delay_record ? "on" : "off");
 	clrtoeol();
 	y_offs++;
 
 	bkgdset(color_map[0]);
 	attrset(color_map[0]);
-	snprintf(buf, sizeof buf, " Synchronise playback: %s", m_sync_playback ? "on" : "off");
-	mvaddstr(y_offs, 0, buf);
+	mvprintw(y_offs, 0, " Synchronise playback: %s", m_sync_playback ? "on" : "off");
 	clrtoeol();
 	y_offs++;
 
@@ -154,14 +107,12 @@ bool UI::Run(Jack &j)
 		bkgdset(color_map[0]);
 		attrset(color_map[0]);
 
-		snprintf(buf, sizeof buf, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs) Tempo: ", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i));
-		mvaddstr(i + y_offs, 0, buf);
+		mvprintw(i + y_offs, 0, " [ ] %2d: Position: %0.2f beats (%0.2fs) Length: %0.2f beats (%0.2fs) Tempo: ", i, m_bpm * j.LoopPosition(i) / 60.0, j.LoopPosition(i), m_bpm * j.LoopLength(i) / 60.0, j.LoopLength(i));
 		if (m_loop == i && m_edit_mode == EM_TEMPO) {
 			bkgdset(color_map[2]);
 			attrset(color_map[2]);
 		}
-		snprintf(buf, sizeof buf, "%0.1f%%", j.GetTempo(i) * 100);
-		addstr(buf);
+		printw("%0.1f%%", j.GetTempo(i) * 100);
 		bkgdset(color_map[0]);
 		attrset(color_map[0]);
 		clrtoeol();
