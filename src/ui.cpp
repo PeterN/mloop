@@ -60,7 +60,7 @@ bool UI::Run(Jack &j)
 
 	bkgdset(color_map[1]);
 	attrset(color_map[1]);
-	mvaddstr(y_offs, 0, " mloop ");
+	mvprintw(y_offs, 0, " mloop - %s", j.m_client_name);
 	clrtoeol();
 	y_offs++;
 

@@ -46,6 +46,8 @@ public:
 	Jack();
 	~Jack();
 
+	const char *m_client_name;
+
 	bool Connect();
 	void Disconnect();
 	bool Run();

@@ -13,6 +13,7 @@ Jack::Jack()
 	m_recording = false;
 	m_loop_buffer = new RingBuffer(2048);
 	m_notecache.Reset();
+	m_client_name = "mloop";
 }
 
 Jack::~Jack()
@@ -26,7 +27,7 @@ bool Jack::Connect()
 	if (m_connected) return true;
 
 	jack_status_t status;
-	m_client = jack_client_open("mloop", JackNoStartServer, &status);
+	m_client = jack_client_open(m_client_name, JackNoStartServer, &status);
 	if (m_client == NULL) {
 		if (status & JackServerFailed) {
 			fprintf(stderr, "JACK server not running\n");
@@ -38,6 +39,7 @@ bool Jack::Connect()
 
 	m_connected = true;
 
+	m_client_name = jack_get_client_name(m_client);
 	m_sample_rate = jack_get_sample_rate(m_client);
 
 	jack_on_shutdown(m_client, &ShutdownCallbackHandler, this);
