@@ -144,12 +144,14 @@ void Jack::ToggleRecording(int loop, int bpm, bool delay)
 		m_loops[m_recording_loop].SetState(LS_IDLE);
 		m_loops[m_recording_loop].EndFromNoteCache(m_notecache);
 	} else {
-		m_recording_loop = loop;
-		m_loops[m_recording_loop].SetState(LS_RECORDING);
-		m_loops[m_recording_loop].StartFromNoteCache(m_notecache);
-		m_recording_time = 0;
-		m_recording = true;
-		m_delay_record = delay;
+		if (m_loops[loop].State() == LS_IDLE) {
+			m_recording_loop = loop;
+			m_loops[m_recording_loop].SetState(LS_RECORDING);
+			m_loops[m_recording_loop].StartFromNoteCache(m_notecache);
+			m_recording_time = 0;
+			m_recording = true;
+			m_delay_record = delay;
+		}
 	}
 }
 
