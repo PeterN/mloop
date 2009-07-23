@@ -142,10 +142,10 @@ bool UI::Run(Jack &j)
 	int c = getch();
 
 	switch (c) {
-		case 3:
+		case UIKEY_QUIT:
 			return true;
 
-		case 'r':
+		case UIKEY_RECORD:
 			j.ToggleRecording(m_loop, m_quantise ? m_bpm : 0, m_delay_record);
 			if (j.Recording()) {
 				snprintf(status, sizeof status, "Start recording loop %d", m_loop);
@@ -190,40 +190,40 @@ bool UI::Run(Jack &j)
 			}
 			break;
 
-		case 'z':
-		case 'x':
-			snprintf(status, sizeof status, "Starting loop %d (%s)", m_loop, c == 'x' ? "loop" : "once");
-			j.StartLoop(m_loop, c == 'x', m_sync_playback);
+		case UIKEY_PLAY_ONCE:
+		case UIKEY_PLAY_LOOP:
+			snprintf(status, sizeof status, "Starting loop %d (%s)", m_loop, c == UIKEY_PLAY_LOOP ? "loop" : "once");
+			j.StartLoop(m_loop, c == UIKEY_PLAY_LOOP, m_sync_playback);
 			break;
 
-		case 'c':
+		case UIKEY_STOP:
 			snprintf(status, sizeof status, "Stopping loop %d", m_loop);
 			j.StopLoop(m_loop);
 			break;
 
-		case 'e':
+		case UIKEY_ERASE:
 			snprintf(status, sizeof status, "Erasing loop %d", m_loop);
 			j.EraseLoop(m_loop);
 			break;
 
-		case 'q':
+		case UIKEY_QUANTISE:
 			m_quantise = !m_quantise;
 			snprintf(status, sizeof status, "Set quantise %s", m_quantise ? "on" : "off");
 			break;
 
-		case 'd':
+		case UIKEY_DELAY:
 			m_delay_record = !m_delay_record;
 			break;
 
-		case 's':
+		case UIKEY_SYNC:
 			m_sync_playback = !m_sync_playback;
 			break;
 
-		case 'b':
+		case UIKEY_BPM:
 			m_edit_mode = EM_BPM;
 			break;
 
-		case 't':
+		case UIKEY_TEMPO:
 			m_edit_mode = EM_TEMPO;
 			break;
 
@@ -266,7 +266,7 @@ bool UI::Run(Jack &j)
 			}
 			break;
 
-		case 'S':
+		case UIKEY_SAVE:
 			j.Save();
 			break;
 	}

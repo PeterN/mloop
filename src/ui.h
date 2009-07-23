@@ -29,4 +29,17 @@ public:
 	bool Run(Jack &j);
 };
 
+#define UIKEY_QUIT 3
+#define UIKEY_RECORD 'r'
+#define UIKEY_PLAY_ONCE 'z'
+#define UIKEY_PLAY_LOOP 'x'
+#define UIKEY_STOP 'c'
+#define UIKEY_ERASE 'e'
+#define UIKEY_QUANTISE 'q'
+#define UIKEY_DELAY 'd'
+#define UIKEY_SYNC 's'
+#define UIKEY_BPM 'b'
+#define UIKEY_TEMPO 't'
+#define UIKEY_SAVE 'S'
+
 #endif /* UI_H */
