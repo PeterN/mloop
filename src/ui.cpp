@@ -277,6 +277,13 @@ bool UI::Run(Jack &j)
 				}
 			}
 			break;
+
+		case UIKEY_DISCONNECT:
+			if (j.Connected()) {
+				j.Disconnect();
+				snprintf(status, sizeof status, "Disconnected from JACK");
+			}
+			break;
 	}
 
 	return false;

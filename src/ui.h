@@ -42,5 +42,6 @@ public:
 #define UIKEY_TEMPO 't'
 #define UIKEY_SAVE 'S'
 #define UIKEY_RECONNECT 18
+#define UIKEY_DISCONNECT 4
 
 #endif /* UI_H */
