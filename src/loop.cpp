@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <stdio.h>
 #include "loop.h"
 
 Loop::Loop()
@@ -146,4 +147,20 @@ void Loop::Empty()
 	}
 
 	m_events.clear();
+}
+
+void Loop::Save(FILE *f) const
+{
+	fprintf(f, "%u %f %f\n", m_length, m_position, m_tempo);
+	fprintf(f, "%lu\n", m_events.size());
+
+	EventList::const_iterator it;
+	for (it = m_events.begin(); it != m_events.end(); ++it) {
+		const jack_midi_event_t &ev = *it;
+		fprintf(f, "%u %lu", ev.time, ev.size);
+		for (uint i = 0; i < ev.size; i++) {
+			fprintf(f, " %02X", ev.buffer[i]);
+		}
+		fprintf(f, "\n");
+	}
 }

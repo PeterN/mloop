@@ -89,6 +89,8 @@ public:
 	{
 		return m_loops[loop].Tempo();
 	}
+
+	void Save() const;
 };
 
 #endif /* JACK_H */

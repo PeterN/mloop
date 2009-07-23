@@ -3,6 +3,7 @@
 #ifndef LOOP_H
 #define LOOP_H
 
+#include <stdio.h>
 #include <stdint.h>
 #include <list>
 #include <jack/jack.h>
@@ -79,6 +80,8 @@ public:
 	{
 		return m_loop;
 	}
+
+	void Save(FILE *f) const;
 };
 
 #endif /* LOOP_H */

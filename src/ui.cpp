@@ -314,6 +314,10 @@ bool UI::Run(Jack &j)
 				m_edit_timer = EDIT_TIMER_RESET;
 			}
 			break;
+
+		case 'S':
+			j.Save();
+			break;
 	}
 
 	return false;

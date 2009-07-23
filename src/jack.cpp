@@ -184,3 +184,12 @@ bool Jack::Run()
 	return false;
 }
 
+void Jack::Save() const
+{
+	FILE *f = fopen("test.txt", "w");
+	for (int i = 0; i < NUM_LOOPS; i++) {
+		fprintf(f, "LOOP %d\n", i);
+		m_loops[i].Save(f);
+	}
+	fclose(f);
+}
