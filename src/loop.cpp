@@ -134,6 +134,26 @@ void Loop::EndFromNoteCache(NoteCache &cache)
 	}
 }
 
+void Loop::Finalise()
+{
+	NoteCache nc;
+
+	/* Remove all events after the end of the loop. */
+	EventList::iterator it;
+	for (it = m_events.begin(); it != m_events.end();) {
+		jack_midi_event_t &ev = *it;
+		if (ev.time < m_length) {
+			nc.HandleEvent(ev);
+			++it;
+		} else {
+			it = m_events.erase(it);
+		}
+	}
+
+	/* Now make sure no notes are left on. */
+	EndFromNoteCache(nc);
+}
+
 void Loop::Empty()
 {
 	if (m_state != LS_IDLE) return;

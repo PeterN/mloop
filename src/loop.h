@@ -81,6 +81,8 @@ public:
 		return m_loop;
 	}
 
+	void Finalise();
+
 	void Save(FILE *f) const;
 };
 
