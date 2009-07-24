@@ -227,7 +227,7 @@ bool UI::Run(Jack &j)
 			m_edit_mode = EM_TEMPO;
 			break;
 
-		case '\r':
+		case 10:
 			m_edit_mode = EM_LOOPS;
 			m_edit_timer = 0;
 			break;
