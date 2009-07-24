@@ -20,13 +20,12 @@ void Loop::PlayFrame(void *port_buffer, jack_nframes_t frame)
 	if (m_state == LS_IDLE || m_state == LS_RECORDING) return;
 
 	if (m_state == LS_STOPPING) {
-		uint8_t buffer[3];
-		buffer[1] = 0x78;
-		buffer[2] = 0;
-
-		for (int i = 0; i < 16; i++) {
-			buffer[0] = 0xB0 + i;
-			jack_midi_event_write(port_buffer, frame, buffer, sizeof buffer);
+		/* Iterate the remainder of the loop but only send note off events */
+		for (; m_iterator != m_events.end(); ++m_iterator) {
+			jack_midi_event_t &event = *m_iterator;
+			if ((event.buffer[0] & 0xF0) == 0x80) {
+				jack_midi_event_write(port_buffer, frame, event.buffer, event.size);
+			}
 		}
 
 		m_state = LS_IDLE;
