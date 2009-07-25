@@ -6,6 +6,12 @@
 
 bool RingBuffer::PushEvent(const jack_midi_event_t &ev)
 {
+	/* Don't add the event to the buffer if it will become full.
+	 * This includes the case where the event would actually fit,
+	 * but would cause the buffer to be full. This prevents the
+	 * need for extra logic to determine if the buffer is full
+	 * or empty.
+	 */
 	size_t f = jack_ringbuffer_write_space(m_buffer);
 	if (f <= sizeof ev.time + sizeof ev.size + ev.size) return false;
 

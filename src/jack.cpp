@@ -98,12 +98,6 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 			m_notecache.HandleEvent(ev);
 
 			if (m_recording) {
-				/* Don't add the event to the buffer if it will become full.
-				 * This includes the case where the event would actually fit,
-				 * but would cause the buffer to be full. This prevents the
-				 * need for extra logic to determine if the buffer is full
-				 * or empty.
-				 */
 				ev.time += m_recording_time;
 				if (m_loop_buffer->PushEvent(ev)) {
 					m_delay_record = false;
