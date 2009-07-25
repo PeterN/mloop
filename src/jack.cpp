@@ -98,6 +98,7 @@ int Jack::ProcessCallback(jack_nframes_t nframes)
 			m_notecache.HandleEvent(ev);
 
 			if (m_recording) {
+				if (m_delay_record) m_recording_time = -ev.time;
 				ev.time += m_recording_time;
 				if (m_loop_buffer->PushEvent(ev)) {
 					m_delay_record = false;
