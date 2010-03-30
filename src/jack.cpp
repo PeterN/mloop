@@ -37,8 +37,6 @@ bool Jack::Connect()
 		return false;
 	}
 
-	m_connected = true;
-
 	m_client_name = jack_get_client_name(m_client);
 	m_sample_rate = jack_get_sample_rate(m_client);
 
@@ -49,6 +47,8 @@ bool Jack::Connect()
 	m_output = jack_port_register(m_client, "output", JACK_DEFAULT_MIDI_TYPE, JackPortIsOutput, 0);
 
 	m_control = jack_port_register(m_client, "control", JACK_DEFAULT_MIDI_TYPE, JackPortIsInput|JackPortIsTerminal, 0);
+
+	m_connected = true;
 
 	jack_activate(m_client);
 
@@ -181,12 +181,49 @@ bool Jack::Run()
 	return false;
 }
 
+void Jack::StopAll()
+{
+	for (int i = 0; i < NUM_LOOPS; i++) {
+		StopLoop(i);
+	}
+}
+
+void Jack::EraseAll()
+{
+	for (int i = 0; i < NUM_LOOPS; i++) {
+		EraseLoop(i);
+	}
+}
+
 void Jack::Save() const
 {
 	FILE *f = fopen("test.txt", "w");
+	fprintf(f, "sample_rate:%d bpm:%u\n", m_sample_rate);
 	for (int i = 0; i < NUM_LOOPS; i++) {
-		fprintf(f, "LOOP %d\n", i);
+		fprintf(f, "loop:%d\n", i);
 		m_loops[i].Save(f);
 	}
 	fclose(f);
+}
+
+void Jack::Load()
+{
+	StopAll();
+	EraseAll();
+
+	int ret;
+	FILE *f = fopen("test.txt", "r");
+
+	int sample_rate;
+	ret = fscanf(f, "sample_rate:%d\n", &sample_rate);
+	if (ret != 1) return;
+
+	while (!feof(f)) {
+		int i;
+
+		ret = fscanf(f, "loop:%d\n", &i);
+		if (ret != 1) return;
+
+		m_loops[i].Load(f, sample_rate, m_sample_rate);
+	}
 }

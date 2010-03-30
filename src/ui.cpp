@@ -201,6 +201,11 @@ bool UI::Run(Jack &j)
 			j.StopLoop(m_loop);
 			break;
 
+		case UIKEY_STOP_ALL:
+			snprintf(status, sizeof status, "Stopping all loops");
+			j.StopAll();
+			break;
+
 		case UIKEY_ERASE:
 			snprintf(status, sizeof status, "Erasing loop %d", m_loop);
 			j.EraseLoop(m_loop);
@@ -268,6 +273,10 @@ bool UI::Run(Jack &j)
 
 		case UIKEY_SAVE:
 			j.Save();
+			break;
+
+		case UIKEY_LOAD:
+			j.Load();
 			break;
 
 		case UIKEY_RECONNECT:

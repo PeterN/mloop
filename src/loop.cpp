@@ -1,6 +1,7 @@
 /* $Id$ */
 
 #include <stdio.h>
+#include <string.h>
 #include "loop.h"
 
 Loop::Loop()
@@ -170,16 +171,47 @@ void Loop::Empty()
 
 void Loop::Save(FILE *f) const
 {
-	fprintf(f, "%u %f %f\n", m_length, m_position, m_tempo);
-	fprintf(f, "%lu\n", (unsigned long)m_events.size());
+	fprintf(f, "length:%u position:%f tempo:%f events:%lu\n", m_length, m_position, m_tempo, (unsigned long)m_events.size());
 
 	EventList::const_iterator it;
 	for (it = m_events.begin(); it != m_events.end(); ++it) {
 		const jack_midi_event_t &ev = *it;
-		fprintf(f, "%u %lu", ev.time, (unsigned long)ev.size);
+		fprintf(f, "time:%u size:%lu", ev.time, (unsigned long)ev.size);
 		for (uint i = 0; i < ev.size; i++) {
 			fprintf(f, " %02X", ev.buffer[i]);
 		}
 		fprintf(f, "\n");
+	}
+}
+
+void Loop::Load(FILE *f, int file_sample_rate, int jack_sample_rate)
+{
+	int ret;
+	unsigned long events;
+
+	ret = fscanf(f, "length:%u position:%f tempo:%f events:%lu\n", &m_length, &m_position, &m_tempo, &events);
+	if (ret != 4) return;
+
+	while (events--) {
+		char *data;
+		unsigned long size;
+		jack_midi_event_t ev;
+
+		ret = fscanf(f, "time:%u size:%lu %a[0-9A-F ]\n", &ev.time, &size, &data);
+		if (ret != 3) return;
+		//ev.time = ev.time * jack_sample_rate / file_sample_rate;
+		ev.size = (size_t)size;
+		ev.buffer = (unsigned char *)malloc(ev.size);
+
+		/* Yup, no bounds checking... */
+		unsigned char *p = ev.buffer;
+		char *q = data;
+		while (size--) {
+			*p++ = strtol(q, NULL, 16);
+			q += 3;
+		}
+		free(data);
+
+		AddEvent(&ev);
 	}
 }

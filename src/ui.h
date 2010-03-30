@@ -34,6 +34,7 @@ public:
 #define UIKEY_PLAY_ONCE 'z'
 #define UIKEY_PLAY_LOOP 'x'
 #define UIKEY_STOP 'c'
+#define UIKEY_STOP_ALL 'C'
 #define UIKEY_ERASE 'e'
 #define UIKEY_QUANTISE 'q'
 #define UIKEY_DELAY 'd'
@@ -41,6 +42,7 @@ public:
 #define UIKEY_BPM 'b'
 #define UIKEY_TEMPO 't'
 #define UIKEY_SAVE 'S'
+#define UIKEY_LOAD 'L'
 #define UIKEY_RECONNECT 18
 #define UIKEY_DISCONNECT 4
 

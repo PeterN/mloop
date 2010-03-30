@@ -84,6 +84,7 @@ public:
 	void Finalise();
 
 	void Save(FILE *f) const;
+	void Load(FILE *f, int file_sample_rate, int jack_sample_rate);
 };
 
 #endif /* LOOP_H */

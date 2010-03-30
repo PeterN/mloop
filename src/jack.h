@@ -97,7 +97,11 @@ public:
 		return m_loops[loop].Tempo();
 	}
 
+	void StopAll();
+	void EraseAll();
+
 	void Save() const;
+	void Load();
 };
 
 #endif /* JACK_H */
