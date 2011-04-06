@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 def configure(conf):
-	conf.check_cfg(package='jack', uselib_store='JACK', args='--cflags --libs', atleast_version='1.9.2')
+	conf.check_cfg(package='jack', uselib_store='JACK', args='--cflags --libs', atleast_version='0.116.2')
 	conf.env['LIB_NCURSES'] = ['ncurses']
 
 def build(bld):
