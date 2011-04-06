@@ -7,9 +7,10 @@
 int main(int argc, char **argv)
 {
 	Jack j;
-	UI u;
 
-	j.Connect();
+	if (!j.Connect()) return 1;
+
+	UI u;
 
 	while (true) {
 		if (j.Run()) break;
